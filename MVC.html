@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>🍽️ Sistema de Menú de Restaurante</title>
+    <style>
+        body {
+          margin: 0;
+          font-family: "Segoe UI", sans-serif;
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: #333;
+        }
+
+        header {
+          background: linear-gradient(90deg, #ff6a00, #ee0979);
+          color: white;
+          text-align: center;
+          padding: 1.5rem;
+          border-bottom-left-radius: 25px;
+          border-bottom-right-radius: 25px;
+        }
+
+        header h1 {
+          margin: 0;
+          font-size: 2rem;
+        }
+
+        header p {
+          margin: 0.5rem 0 0;
+        }
+
+        .container {
+          background: #f9f9f9;
+          max-width: 600px;
+          margin: 2rem auto;
+          padding: 2rem;
+          border-radius: 15px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+          margin-top: 0;
+          text-align: center;
+        }
+
+        label {
+          display: block;
+          margin-top: 1rem;
+          font-weight: 600;
+        }
+
+        input {
+          width: 100%;
+          padding: 0.5rem;
+          margin-top: 0.3rem;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+        }
+
+        .btn-group {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+          margin-top: 1.5rem;
+        }
+
+        .btn-row {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 10px;
+        }
+
+        button {
+          padding: 0.7rem;
+          border: none;
+          border-radius: 8px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: 0.3s;
+          color: white;
+          width: 100%;
+        }
+
+        .agregar { background: #4CAF50; }
+        .precio { background: #ff9800; }
+        .eliminar { background: #f44336; }
+        .mostrar { background: #2196F3; }
+
+        button:hover {
+          filter: brightness(1.1);
+        }
+
+        .mensaje {
+          margin-top: 1rem;
+          text-align: center;
+          font-weight: bold;
+          color: #333;
+        }
+
+        table {
+          width: 100%;
+          margin-top: 2rem;
+          border-collapse: collapse;
+          background: white;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        th, td {
+          padding: 10px;
+          border-bottom: 1px solid #ddd;
+          text-align: left;
+        }
+
+        th {
+          background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>🍽️ Sistema de Menú de Restaurante</h1>
+    <p>Gestión de menú con patrón MVC - TypeScript</p>
+</header>
+
+<div class="container">
+    <h2>📋 Panel de Control</h2>
+    <label>Nombre del Plato:
+        <input type="text" id="nombrePlato" placeholder="Ej: Hamburguesa Clásica" />
+    </label>
+
+    <label>Precio ($):
+        <input type="number" id="precioPlato" placeholder="Ej: 8.99" />
+    </label>
+
+    <div class="btn-group">
+        <button class="agregar" onclick="agregarPlato()">➕ AGREGAR</button>
+        <button class="precio" onclick="cambiarPrecio()">💰 CAMBIAR PRECIO</button>
+        <button class="eliminar" onclick="eliminarPlato()">🗑️ ELIMINAR</button>
+        <button class="mostrar" onclick="mostrarMenu()">📋 MOSTRAR MENÚ</button>
+    </div>
+
+    <div class="mensaje" id="mensaje"></div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Precio ($)</th>
+        </tr>
+        </thead>
+        <tbody id="tablaPlatos"></tbody>
+    </table>
+</div>
+
+<script>
+    class Plato {
+      constructor(nombre, precio) {
+        this.nombre = nombre;
+        this.precio = precio;
+      }
+
+      getNombre() {
+        return this.nombre;
+      }
+
+      getPrecio() {
+        return this.precio;
+      }
+
+      setNombre(n) {
+        this.nombre = n;
+      }
+
+      setPrecio(p) {
+        this.precio = p;
+      }
+    }
+
+    class MenuVista {
+      constructor() {
+        this.mensaje = document.getElementById("mensaje");
+        this.tabla = document.getElementById("tablaPlatos");
+      }
+
+      mostrarPlatos(platos) {
+        this.tabla.innerHTML = "";
+        platos.forEach(p => {
+          const fila = document.createElement("tr");
+          fila.innerHTML = `<td>${p.getNombre()}</td><td>$${p.getPrecio().toFixed(2)}</td>`;
+          this.tabla.appendChild(fila);
+        });
+      }
+
+      mostrarMensaje(msg) {
+        this.mensaje.textContent = msg;
+        setTimeout(() => this.mensaje.textContent = "", 3000);
+      }
+    }
+
+    class MenuControlador {
+      constructor(vista) {
+        this.platos = [];
+        this.vista = vista;
+      }
+
+      agregarPlato(p) {
+        if (p.getNombre().trim() === "" || isNaN(p.getPrecio()) || p.getPrecio() <= 0) {
+          this.vista.mostrarMensaje("⚠️ Datos inválidos. Verifique nombre y precio.");
+          return;
+        }
+        this.platos.push(p);
+        this.vista.mostrarMensaje(`✅ Plato "${p.getNombre()}" agregado.`);
+        this.mostrarMenu();
+      }
+
+      eliminarPlato(nombre) {
+        const index = this.platos.findIndex(p => p.getNombre().toLowerCase() === nombre.toLowerCase());
+        if (index !== -1) {
+          this.platos.splice(index, 1);
+          this.vista.mostrarMensaje(`🗑️ Plato "${nombre}" eliminado.`);
+        } else {
+          this.vista.mostrarMensaje(`⚠️ Plato "${nombre}" no encontrado.`);
+        }
+        this.mostrarMenu();
+      }
+
+      cambiarPrecio(nombre, nuevoPrecio) {
+        const plato = this.platos.find(p => p.getNombre().toLowerCase() === nombre.toLowerCase());
+        if (plato && nuevoPrecio > 0) {
+          plato.setPrecio(nuevoPrecio);
+          this.vista.mostrarMensaje(`💰 Precio de "${nombre}" actualizado.`);
+        } else {
+          this.vista.mostrarMensaje(`⚠️ No se pudo actualizar el precio.`);
+        }
+        this.mostrarMenu();
+      }
+
+      mostrarMenu() {
+        this.vista.mostrarPlatos(this.platos);
+      }
+    }
+
+    const vista = new MenuVista();
+    const controlador = new MenuControlador(vista);
+
+    function agregarPlato() {
+      const nombre = document.getElementById("nombrePlato").value;
+      const precio = parseFloat(document.getElementById("precioPlato").value);
+      const nuevo = new Plato(nombre, precio);
+      controlador.agregarPlato(nuevo);
+    }
+
+    function eliminarPlato() {
+      const nombre = document.getElementById("nombrePlato").value;
+      controlador.eliminarPlato(nombre);
+    }
+
+    function cambiarPrecio() {
+      const nombre = document.getElementById("nombrePlato").value;
+      const nuevoPrecio = parseFloat(document.getElementById("precioPlato").value);
+      controlador.cambiarPrecio(nombre, nuevoPrecio);
+    }
+
+    function mostrarMenu() {
+      controlador.mostrarMenu();
+    }
+</script>
+</body>
+</html>
